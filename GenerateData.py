@@ -6,6 +6,17 @@ import cv2
 from sklearn.model_selection import train_test_split
 
 
+def duplicate(dir_train, dir_test):
+    csv_train = pd.read_csv(dir_train)
+    train_list = csv_train['dire'].to_list()
+    csv_test = pd.read_csv(dir_test)
+    test_list = csv_test['dire'].to_list()
+
+    for file in test_list:
+        if file in train_list:
+            print("Duplicate!")
+
+
 def generate(fold):
     dire = []
     label = []
@@ -28,4 +39,6 @@ def generate(fold):
 
 if __name__ == '__main__':
     folder = "C:/Users/alexn/Desktop/PetImages/train/"
-    generate(folder)
+    train_data = "C:/Users/alexn/Desktop/PetImages/Train.csv"
+    test_data = "C:/Users/alexn/Desktop/PetImages/Test.csv"
+    duplicate(train_data, test_data)

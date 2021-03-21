@@ -100,7 +100,7 @@ class Model:
     optim: Adam
     """
 
-    def __init__(self, num_epochs, batch_size, lr, csv_train, csv_test, threeD, num_workers=3):
+    def __init__(self, num_epochs, batch_size, lr, csv_train, csv_test, threeD, load, num_workers=3):
         """
 
         :param num_epochs:
@@ -122,7 +122,7 @@ class Model:
         self.v_loss = []
         self.best_val_loss = 100
         self.threeD = threeD
-        self.load = False
+        self.load = load
 
         self.column_name = ["Training True pos rate", 'Training False Positive rate',
                             'Training Specificify', "Validation True pos rate", 'Validation False Positive rate',
@@ -151,7 +151,8 @@ class Model:
         else:
             print('else')
             self.net = monai.networks.nets.DenseNet(spatial_dims=2, in_channels=3, out_channels=1, growth_rate=32,
-                                                    init_features=64, dropout_prob=0.5).to(self.device)
+                                                    init_features=128, block_config=(6, 12, 48, 32),  dropout_prob=0.5
+                                                    ).to(self.device)
             replace_batch_to(self.net, threeD)
             self.net.to(self.device)
 
@@ -161,7 +162,7 @@ class Model:
         self.optimizer = torch.optim.AdamW(self.net.parameters(), self.lr)
 
         if self.load:
-            ckp_path = "C:/Users/alexn/Desktop/PetImages/500.pth"
+            ckp_path = "C:/Users/alexn/Desktop/best_9.pth"
             checkpoint = torch.load(ckp_path)
             self.net.load_state_dict(checkpoint['model_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -169,7 +170,7 @@ class Model:
         print('Validation set dimension: ', self.val.__len__())
 
     def summary(self):
-        summary(self.net, (1, 224, 224))
+        summary(self.net, (3, 224, 224))
 
     def update_r(self, list_r):
 
@@ -231,14 +232,11 @@ class Model:
             inputs, labels = sample_batched['image'].to(self.device), sample_batched['label'].to(self.device)
             self.optimizer.zero_grad()
             outputs = self.net(inputs)
-
             labels = labels.to(torch.float32)
             labels = labels.view(-1, 1)
-
             loss = self.criterion(outputs, labels)
             loss.backward()
             self.optimizer.step()
-
             running_loss += loss.item()
             pred = np.round(torch.sigmoid(outputs.detach().cpu()).tolist())
             target = labels.tolist()
@@ -302,11 +300,7 @@ class Model:
 
 
 if __name__ == '__main__':
-    test = Model(100, 1, 1e-4, "C:/Users/alexn/Desktop/PetImages/Train.csv",
-                 "C:/Users/alexn/Desktop/PetImages/Test.csv", False)
-    test.start_train()
-
-    """import argparse
+    import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument("epochs", default=100, help="Set number of epochs", type=int)
@@ -314,10 +308,10 @@ if __name__ == '__main__':
     parser.add_argument("learning_rate", default=1e-5, help="Set the learning rate", type=float)
     parser.add_argument("train_set", help="Path to dataset on local disk", type=Path)
     parser.add_argument("val_set", help="Path to dataset on local disk", type=Path)
-    parser.add_argument("--threeD", default=False, help="Set number of epochs", type=bool, required = False)
+    parser.add_argument("--threeD", default=False, help="Set number of epochs", type=bool, required=False)
+    parser.add_argument("--load", default=False, help="Set if you want to load weight", type=bool, required=False)
 
     args = parser.parse_args()
-    test = Model(args.epochs, args.batch_size, args.learning_rate, args.train_set, args.val_set, args.threeD)
-    test.start_train()"""
+    test = Model(args.epochs, args.batch_size, args.learning_rate, args.train_set, args.val_set, args.threeD, args.load)
+    test.start_train()
 
-    # test.summary()

@@ -106,7 +106,7 @@ class NormPad(object):
         """
         img = sample['image']
         img = norm(img)
-        if np.shape(img) != (224, 224,3):
+        if np.shape(img) != (224, 224, 3):
             img = cv2.resize(img, (224, 224), interpolation=cv2.INTER_CUBIC)
         return {'image': img, 'label': sample['label']}
 
