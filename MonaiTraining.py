@@ -5,7 +5,7 @@ import torch
 import pandas as pd
 import warnings
 import torch.optim as optim
-import matplotlib 
+
 warnings.filterwarnings("ignore")
 from torchvision import transforms, utils
 from torch.utils.data import DataLoader
